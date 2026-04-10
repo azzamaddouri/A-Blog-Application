@@ -4,6 +4,7 @@ import com.apalindromestring.blog.domain.dtos.CategoryDto;
 import com.apalindromestring.blog.domain.entities.Category;
 import com.apalindromestring.blog.repositories.CategoryRepository;
 import com.apalindromestring.blog.services.CategoryService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,4 +20,13 @@ public class CategoryServiceImpl implements CategoryService {
     public List<Category> listCategories() {
         return categoryRepository.findAllWithPostCount();
     }
-}
+
+    @Override
+    @Transactional
+    public Category createCategory(Category category) {
+        if (categoryRepository.existsByNameIgnoreCase(category.getName())) {
+            throw new IllegalArgumentException("Category with name " + category.getName() + " already exists");
+        }
+        return categoryRepository.save(category);
+        }
+    }

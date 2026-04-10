@@ -1,14 +1,15 @@
 package com.apalindromestring.blog.controllers;
 
 import com.apalindromestring.blog.domain.dtos.CategoryDto;
+import com.apalindromestring.blog.domain.dtos.CreateCategoryRequest;
 import com.apalindromestring.blog.domain.entities.Category;
 import com.apalindromestring.blog.mappers.CategoryMapper;
 import com.apalindromestring.blog.services.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,4 +31,10 @@ public class CategoryController {
     }
 
 
+    @PostMapping
+    public ResponseEntity<CategoryDto> addCategory(@Valid @RequestBody CreateCategoryRequest createCategoryRequest) {
+        Category categoryToCreate = categoryMapper.toEntity(createCategoryRequest);
+        Category savedCategory = categoryService.createCategory(categoryToCreate);
+        return new ResponseEntity<>(categoryMapper.ToDto(savedCategory), HttpStatus.CREATED);
+    }
 }

@@ -2,6 +2,7 @@ package com.apalindromestring.blog.mappers;
 
 import com.apalindromestring.blog.domain.PostStatus;
 import com.apalindromestring.blog.domain.dtos.CategoryDto;
+import com.apalindromestring.blog.domain.dtos.CreateCategoryRequest;
 import com.apalindromestring.blog.domain.entities.Category;
 import com.apalindromestring.blog.domain.entities.Post;
 import org.mapstruct.Mapper;
@@ -16,6 +17,9 @@ public interface CategoryMapper {
 
     @Mapping(target = "postCount", source = "posts", qualifiedByName = "calculatePostCount")
     CategoryDto ToDto(Category category);
+
+
+    Category toEntity(CreateCategoryRequest createCategoryRequest);
 
     @Named("calculatePostCount")
     default long calculatePostCount(List<Post> posts) {
