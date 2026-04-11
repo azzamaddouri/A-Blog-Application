@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,4 +31,19 @@ public class CategoryServiceImpl implements CategoryService {
         }
         return categoryRepository.save(category);
         }
+
+    @Override
+    public void deleteCategory(UUID id) {
+        Optional<Category> category = categoryRepository.findById(id);
+
+        if (category.isPresent()) {
+            if (!category.get().getPosts().isEmpty()) {
+                throw new IllegalArgumentException("Category with id " + id + " already has posts");
+
+            }
+            categoryRepository.delete(category.get());
+        }
+
+
     }
+}
