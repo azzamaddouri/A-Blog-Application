@@ -1,5 +1,10 @@
 package com.apalindromestring.blog.config;
 
+import com.apalindromestring.blog.domain.entities.User;
+import com.apalindromestring.blog.repositories.UserRepository;
+import com.apalindromestring.blog.security.BlogUserDetailsService;
+import com.apalindromestring.blog.security.JwtAuthenticationFilter;
+import com.apalindromestring.blog.services.AuthenticationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -7,15 +12,42 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationService authenticationService) {
+        return new JwtAuthenticationFilter(authenticationService);
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        BlogUserDetailsService blogUserDetailsService = new BlogUserDetailsService(userRepository);
+
+        String email = "user@test.com";
+        userRepository.findByEmail(email).orElseGet(
+                ()-> {
+                    User newUser = User.builder()
+                            .name("Test User")
+                            .email(email)
+                            .password(passwordEncoder().encode("password"))
+                            .build();
+                    return userRepository.save(newUser);
+                }
+        );
+
+        return blogUserDetailsService;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
         http
                 // 1. Disable CSRF (not needed for stateless REST APIs)
@@ -23,6 +55,7 @@ public class SecurityConfig {
 
                 // 2. Define which endpoints are public vs protected
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST,"/api/v1/auth").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/posts/**").permitAll()// public
                         .requestMatchers(HttpMethod.GET,"/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/tags/**").permitAll()
@@ -32,7 +65,8 @@ public class SecurityConfig {
                 // 3. Use stateless session (required for JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
