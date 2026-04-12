@@ -1,4 +1,4 @@
-package security;
+package com.apalindromestring.blog.security;
 
 import com.apalindromestring.blog.domain.entities.User;
 import lombok.Getter;
