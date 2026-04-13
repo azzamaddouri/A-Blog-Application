@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken  authentication =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
+                // Use the userId in other request without retrieving it from DB each single time
                 if (userDetails instanceof BlogUserDetails ) {
                     request.setAttribute("userId", ((BlogUserDetails) userDetails).getId());
                 }
